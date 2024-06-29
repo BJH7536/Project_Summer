@@ -6,10 +6,10 @@ using UnityEngine;
 public class CameraController : MonoBehaviour
 {
     public CinemachineVirtualCamera virtualCamera;
-    public Vector3 followOffset = new Vector3(0, 15, -10);
+    public Vector3 followOffset = new Vector3(0, 10, -10);
     public Vector3 lookAtOffset = new Vector3(0, 2, 0);
 
-    void Start()
+    private void Start()
     {
         if (virtualCamera != null)
         {
