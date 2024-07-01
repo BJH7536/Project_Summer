@@ -1,15 +1,27 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using Photon.Pun;
 using UnityEngine;
 
 public class SmoothCameraFollow : MonoBehaviour
 {
-    public Transform target; // µû¶ó°¥ ´ë»ó (ÇÃ·¹ÀÌ¾î)
-    public Vector3 offset = new Vector3(0, 10, -10); // Ä«¸Ş¶ó ¿ÀÇÁ¼Â
-    public float smoothSpeed = 0.125f; // ºÎµå·¯¿î ÀÌµ¿ ¼Óµµ
+    public Transform target; // ë”°ë¼ê°ˆ ëŒ€ìƒ (í”Œë ˆì´ì–´)
+    public Vector3 offset = new Vector3(0, 10, -10); // ì¹´ë©”ë¼ ì˜¤í”„ì…‹
+    public float smoothSpeed = 0.125f; // ë¶€ë“œëŸ¬ìš´ ì´ë™ ì†ë„
+
+    private bool isFollowing;
+
+    public void SetTarget(PlayerController player)
+    {
+        target = player.transform;
+        isFollowing = player.photonView.IsMine;
+    }
 
     private void LateUpdate()
     {
+        if (!isFollowing) return;
+        
         Vector3 desiredPosition = target.position + offset;
         Vector3 smoothedPosition = Vector3.Lerp(transform.position, desiredPosition, smoothSpeed);
         transform.position = smoothedPosition;
