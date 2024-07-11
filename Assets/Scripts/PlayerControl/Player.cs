@@ -34,12 +34,14 @@ public class Player : MonoBehaviour
         _playerInputActions.Enable();
         _playerInputActions.Game.Move.performed += OnMovePerformed;
         _playerInputActions.Game.Move.canceled += OnMoveCanceled;
+        _playerInputActions.Game.Interact.performed += OnInteractPerformed;
     }
 
     private void OnDisable()
     {
         _playerInputActions.Game.Move.performed -= OnMovePerformed;
         _playerInputActions.Game.Move.canceled -= OnMoveCanceled;
+        _playerInputActions.Game.Interact.performed -= OnInteractPerformed;
         _playerInputActions.Disable();
     }
 
@@ -53,6 +55,11 @@ public class Player : MonoBehaviour
     {
         inputVector = Vector2.zero;
         ChangeState(_idleState);
+    }
+
+    private void OnInteractPerformed(InputAction.CallbackContext context)
+    {
+        Debug.Log("Interaction started");
     }
 
     private void FixedUpdate()
@@ -85,7 +92,7 @@ public class Player : MonoBehaviour
 
         public void Execute()
         {
-            // Idle »óÅÂ¿¡¼­´Â ¾Æ¹«°Íµµ ÇÏÁö ¾ÊÀ½
+            // Idle ìƒíƒœì—ì„œëŠ” ì•„ë¬´ê²ƒë„ í•˜ì§€ ì•ŠìŒ
         }
 
         public void Exit() { }
