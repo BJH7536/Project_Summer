@@ -1,31 +1,39 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class Conveyor : MonoBehaviour
 {
-    public float speed;
-    public Vector3 direction;
-    public List<GameObject> onBelt;
+    public float speed; //속도
+    public Vector3 direction;//이동방향
+    public List<Rigidbody> onBelt = new List<Rigidbody>();//벨트 위의 물체 리스트
 
-    void Update()
+//fixedUpdate를 사용해 물체를 이동
+    void FixedUpdate()
     {
-        for (int i = 0; i <= onBelt.Count - 1; i++)
+        foreach (var rb in onBelt)
         {
-            onBelt[i].GetComponent<Rigidbody>().velocity = speed * direction * Time.deltaTime;
+            rb.velocity = speed * direction;
         }
     }
-    
-    //collides가 벨트에 올라왔을 때
+
+//물체가 들어왔을 때 
     private void OnCollisionEnter(Collision collision)
     {
-        onBelt.Add(collision.gameObject);
+        Rigidbody rb = collision.gameObject.GetComponent<Rigidbody>();
+        if (rb != null && !onBelt.Contains(rb))
+        {
+            onBelt.Add(rb);
+        }
     }
-    
-    //뭔가 벨트에서 떠날 때
+
+//물체가 나갈 때
     private void OnCollisionExit(Collision collision)
     {
-        onBelt.Remove(collision.gameObject);
+        Rigidbody rb = collision.gameObject.GetComponent<Rigidbody>();
+        if (rb != null && onBelt.Contains(rb))
+        {
+            rb.velocity = Vector3.zero;
+            onBelt.Remove(rb);
+        }
     }
 }
