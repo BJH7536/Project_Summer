@@ -6,8 +6,12 @@ public class Conveyor : MonoBehaviour
     public float speed; //속도
     public Vector3 direction;//이동방향
     public List<Rigidbody> onBelt = new List<Rigidbody>();//벨트 위의 물체 리스트
-
-    // fixedUpdate를 사용해 물체를 이동
+    public GameObject dough; //피자도우 프리팹
+    void Start()
+    {
+        Instantiate(dough);//피자도우를 생성
+    }
+//fixedUpdate를 사용해 물체를 이동
     void FixedUpdate()
     {
         foreach (var rb in onBelt)
@@ -16,7 +20,7 @@ public class Conveyor : MonoBehaviour
         }
     }
 
-    // 물체가 들어왔을 때 
+//물체가 들어왔을 때 
     private void OnCollisionEnter(Collision collision)
     {
         Rigidbody rb = collision.gameObject.GetComponent<Rigidbody>();
@@ -26,7 +30,7 @@ public class Conveyor : MonoBehaviour
         }
     }
 
-    // 물체가 나갈 때
+//물체가 나갈 때
     private void OnCollisionExit(Collision collision)
     {
         Rigidbody rb = collision.gameObject.GetComponent<Rigidbody>();
