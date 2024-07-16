@@ -209,7 +209,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 359691631}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.40763178, y: 0.00000003879097, z: -0.000000017316424, w: 0.91314644}
+  m_LocalRotation: {x: 0.40763178, y: 0.00000004285561, z: -0.000000019130894, w: 0.91314644}
   m_LocalPosition: {x: 0, y: 15.23, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -635,7 +635,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 2100000, guid: a5c664e12af544d08130074dc7a88629, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -741,7 +741,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 2100000, guid: a5c664e12af544d08130074dc7a88629, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -823,6 +823,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1710160732}
   - component: {fileID: 1710160731}
+  - component: {fileID: 1710160733}
   m_Layer: 0
   m_Name: Directional Light
   m_TagString: Untagged
@@ -907,6 +908,29 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
+--- !u!114 &1710160733
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1710160730}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 474bcb49853aa07438625e644c072ee6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Version: 3
+  m_UsePipelineSettings: 1
+  m_AdditionalLightsShadowResolutionTier: 2
+  m_LightLayerMask: 1
+  m_RenderingLayers: 1
+  m_CustomShadowLayers: 0
+  m_ShadowLayerMask: 1
+  m_ShadowRenderingLayers: 1
+  m_LightCookieSize: {x: 1, y: 1}
+  m_LightCookieOffset: {x: 0, y: 0}
+  m_SoftShadowQuality: 0
 --- !u!1 &1898735665
 GameObject:
   m_ObjectHideFlags: 3
@@ -1066,7 +1090,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2023563168}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.40763178, y: 0.00000003879097, z: -0.000000017316424, w: 0.91314644}
+  m_LocalRotation: {x: 0.40763178, y: 0.00000004285561, z: -0.000000019130894, w: 0.91314644}
   m_LocalPosition: {x: 0, y: 15.23, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
