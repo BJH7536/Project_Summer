@@ -20,6 +20,9 @@ public class Player : MonoBehaviour
     private IPlayerState _currentState;
     private PlayerIdleState _idleState;
     private PlayerRunState _runState;
+    
+    private static readonly int IsRun = Animator.StringToHash("isRun");
+    private static readonly int Holding = Animator.StringToHash("Holding");
 
     private void Awake()
     {
@@ -93,6 +96,7 @@ public class Player : MonoBehaviour
             heldObject.GetComponent<Rigidbody>().isKinematic = true;
             heldObject.GetComponent<Collider>().isTrigger = true;       // 플레이어 캐릭터와 충돌하지 않도록 수정
             Debug.Log("Picked up " + heldObject.name);
+            _animator.SetBool(Holding, true);
             break;
         }
     }
@@ -103,6 +107,7 @@ public class Player : MonoBehaviour
         heldObject.transform.SetParent(null);
         heldObject.GetComponent<Rigidbody>().isKinematic = false;
         heldObject.GetComponent<Collider>().isTrigger = false;
+        _animator.SetBool(Holding, false);
         heldObject = null;
     }
 
@@ -131,7 +136,7 @@ public class Player : MonoBehaviour
         public void Enter(Player player)
         {
             _player = player;
-            _player._animator.SetBool("isRun", false);
+            _player._animator.SetBool(IsRun, false);
             _player._rigidbody.velocity = Vector3.zero;
             _player._rigidbody.angularVelocity = Vector3.zero;
         }
@@ -150,7 +155,7 @@ public class Player : MonoBehaviour
         public void Enter(Player player)
         {
             _player = player;
-            _player._animator.SetBool("isRun", true);
+            _player._animator.SetBool(IsRun, true);
         }
 
         public void Execute()
