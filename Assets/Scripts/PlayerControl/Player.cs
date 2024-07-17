@@ -10,22 +10,26 @@ public class Player : MonoBehaviour
     [SerializeField] private float speed = 15f;
     [SerializeField] private Transform holdPosition; // 플레이어 앞에 오브젝트를 들 위치
     [SerializeField] private Transform raycastOrigin; // 레이캐스트 시작 위치
-    [SerializeField] private float interactDistance = 5f; // 상호작용 거리 (기본값을 5로 증가)
+    [SerializeField] private float interactDistance = 3f; // 상호작용 거리 (기본값을 5로 증가)
 
     private PlayerInputActions _playerInputActions;
     private Rigidbody _rigidbody;
     private Animator _animator;
-    private GameObject heldObject; // 들고 있는 오브젝트
+    private Holdable heldObject; // 들고 있는 오브젝트
 
     private IPlayerState _currentState;
     private PlayerIdleState _idleState;
     private PlayerRunState _runState;
+
+    private int interactableLayer;
     
     private static readonly int IsRun = Animator.StringToHash("isRun");
     private static readonly int Holding = Animator.StringToHash("Holding");
 
     private void Awake()
     {
+        interactableLayer = LayerMask.GetMask("Interactable");
+        
         _playerInputActions = new PlayerInputActions();
         _rigidbody = GetComponent<Rigidbody>();
         _animator = GetComponentInChildren<Animator>();
@@ -68,45 +72,63 @@ public class Player : MonoBehaviour
     {
         if (heldObject == null)
         {
-            TryPickUpObject();
+            TryInteractSomething();
         }
         else
         {
-            DropObject();
+            heldObject.Release(this);
         }
     }
-
-    private void TryPickUpObject()
+    
+    private void TryInteractSomething()
     {
         // => 기존에 tag를 통해서 물체를 감지하던 코드를 Layer기반으로 수정.
-        int interactableLayer = LayerMask.GetMask("Interactable");
-        
-        // 최대 감지할 수 있는 충돌체 수를 정의 (예: 10)
+        // 최대 감지할 수 있는 충돌체의 수는 10개
         Collider[] colliders = new Collider[10];
         
         // 충돌체 감지
-        int numColliders = Physics.OverlapSphereNonAlloc(raycastOrigin.position, interactDistance, colliders, interactableLayer);
+        Physics.OverlapSphereNonAlloc(raycastOrigin.position, interactDistance, colliders, interactableLayer);
 
-        for (int i = 0; i < numColliders; i++)
+        foreach (var col in colliders)
         {
-            Collider collider = colliders[i];
-            heldObject = collider.gameObject;
-            heldObject.transform.SetParent(holdPosition);
-            heldObject.transform.localPosition = Vector3.zero;
-            heldObject.GetComponent<Rigidbody>().isKinematic = true;
-            heldObject.GetComponent<Collider>().isTrigger = true;       // 플레이어 캐릭터와 충돌하지 않도록 수정
-            Debug.Log("Picked up " + heldObject.name);
-            _animator.SetBool(Holding, true);
-            break;
+            if(col == null) continue;
+            
+            // Holdable 인터페이스를 상속받는 컴포넌트가 있는지 확인
+            var holdable = col.GetComponent<Holdable>();
+            if (holdable != null)
+            {
+                // Hold() 함수 호출
+                holdable.Hold(this);
+                break;
+            }
         }
     }
 
-    private void DropObject()
+    /// <summary>
+    /// 토핑을 드는 기능
+    /// </summary>
+    /// <param name="topping"></param>
+    public void HoldTopping(Holdable topping)
     {
-        Debug.Log("Dropped "+heldObject.name);
-        heldObject.transform.SetParent(null);
-        heldObject.GetComponent<Rigidbody>().isKinematic = false;
-        heldObject.GetComponent<Collider>().isTrigger = false;
+        // 물체를 들기 위한 로직
+        heldObject = topping;
+        heldObject.transform.SetParent(holdPosition);
+        heldObject.transform.localPosition = Vector3.zero;
+        heldObject.GetComponent<Rigidbody>().isKinematic = true;
+        heldObject.GetComponent<Collider>().isTrigger = true;       // 플레이어 캐릭터와 충돌하지 않도록 수정
+        Debug.Log("Picked up " + heldObject.name);
+        _animator.SetBool(Holding, true);
+    }
+    
+    /// <summary>
+    /// 토핑을 내려놓는 기능
+    /// </summary>
+    public void ReleaseTopping(Holdable topping)
+    {
+        Debug.Log("Dropped " + topping.name);
+        topping.transform.SetParent(null);
+        topping.GetComponent<Rigidbody>().isKinematic = false;
+        topping.GetComponent<Collider>().isTrigger = false;
         _animator.SetBool(Holding, false);
         heldObject = null;
     }
@@ -123,6 +145,8 @@ public class Player : MonoBehaviour
         _currentState.Enter(this);
     }
 
+
+    #region State
     private interface IPlayerState
     {
         void Enter(Player player);
@@ -176,6 +200,8 @@ public class Player : MonoBehaviour
 
         public void Exit() { }
     }
+    
+    #endregion
 
     // Gizmos를 사용하여 상호작용 범위를 시각적으로 표시합니다.
     private void OnDrawGizmos()

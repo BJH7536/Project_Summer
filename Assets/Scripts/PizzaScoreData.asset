@@ -1,0 +1,71 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c373cf539390b714f94a946b633dc195, type: 3}
+  m_Name: PizzaScoreData
+  m_EditorClassIdentifier: 
+  toppingScores:
+  - PizzaType: 1
+    bulgogiPizzaScore: 10
+    cheesePizzaScore: 10
+    pepperoniPizzaScore: -3
+    hawaiianPizzaScore: -5
+    shrimpPizzaScore: -3
+    mushroomPizzaScore: 2
+    baconPizzaScore: -3
+  - PizzaType: 2
+    bulgogiPizzaScore: -3
+    cheesePizzaScore: 10
+    pepperoniPizzaScore: -3
+    hawaiianPizzaScore: -5
+    shrimpPizzaScore: -3
+    mushroomPizzaScore: 2
+    baconPizzaScore: -3
+  - PizzaType: 3
+    bulgogiPizzaScore: -5
+    cheesePizzaScore: 10
+    pepperoniPizzaScore: 10
+    hawaiianPizzaScore: 2
+    shrimpPizzaScore: -3
+    mushroomPizzaScore: 2
+    baconPizzaScore: -3
+  - PizzaType: 4
+    bulgogiPizzaScore: -3
+    cheesePizzaScore: 10
+    pepperoniPizzaScore: 2
+    hawaiianPizzaScore: 10
+    shrimpPizzaScore: -3
+    mushroomPizzaScore: 2
+    baconPizzaScore: 2
+  - PizzaType: 5
+    bulgogiPizzaScore: -5
+    cheesePizzaScore: 10
+    pepperoniPizzaScore: -3
+    hawaiianPizzaScore: -3
+    shrimpPizzaScore: 10
+    mushroomPizzaScore: 2
+    baconPizzaScore: -3
+  - PizzaType: 6
+    bulgogiPizzaScore: -3
+    cheesePizzaScore: 10
+    pepperoniPizzaScore: -3
+    hawaiianPizzaScore: -3
+    shrimpPizzaScore: 2
+    mushroomPizzaScore: 10
+    baconPizzaScore: 2
+  - PizzaType: 7
+    bulgogiPizzaScore: -3
+    cheesePizzaScore: 10
+    pepperoniPizzaScore: -3
+    hawaiianPizzaScore: -3
+    shrimpPizzaScore: -3
+    mushroomPizzaScore: 2
+    baconPizzaScore: 10
