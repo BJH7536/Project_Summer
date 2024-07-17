@@ -1199,8 +1199,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   EvilTopping: {fileID: 8533486442604558896, guid: 1e4f5e1ec7935334abc3da90d86720fc,
     type: 3}
-  spawnInterval: 1
-  spawnChance: 1
+  spawnInterval: 10
+  spawnChance: 0.05
   spawnAreaSize: {x: 1, y: 1, z: 1}
 --- !u!114 &569320484 stripped
 MonoBehaviour:
