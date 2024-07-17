@@ -26,6 +26,8 @@ public class Player : MonoBehaviour
     private static readonly int IsRun = Animator.StringToHash("isRun");
     private static readonly int Holding = Animator.StringToHash("Holding");
 
+    [SerializeField] private NetworkManager _networkManager;
+    
     private void Awake()
     {
         interactableLayer = LayerMask.GetMask("Interactable");
@@ -56,16 +58,34 @@ public class Player : MonoBehaviour
         _playerInputActions.Disable();
     }
 
+    public void MoveByNetworkManager(Vector2 vector2)
+    {
+        inputVector = vector2;
+        if(inputVector != Vector2.zero)
+            ChangeState(_runState);
+        else
+        {
+            inputVector = Vector2.zero;
+            ChangeState(_idleState);
+        }
+    }
+    
     private void OnMovePerformed(InputAction.CallbackContext context)
     {
-        inputVector = context.ReadValue<Vector2>();
-        ChangeState(_runState);
+        //inputVector = context.ReadValue<Vector2>();
+        
+        _networkManager.player_on_network.moveEventSend($"Move:{inputVector}\n");
+        
+        //ChangeState(_runState);
     }
 
     private void OnMoveCanceled(InputAction.CallbackContext context)
     {
-        inputVector = Vector2.zero;
-        ChangeState(_idleState);
+        //inputVector = Vector2.zero;
+        
+        _networkManager.player_on_network.moveEventSend($"Move:{inputVector}\n");
+        
+        //ChangeState(_idleState);
     }
 
     private void OnInteractPerformed(InputAction.CallbackContext context)

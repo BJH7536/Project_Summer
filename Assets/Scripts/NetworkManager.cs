@@ -1,7 +1,9 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Net.Sockets;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using UnityEngine;
@@ -13,22 +15,23 @@ public class NetworkManager : MonoBehaviour
     private Thread receiveThread;
     private bool isConnected = false;
 
-    //[SerializeField] private Player player;
-    private Player_On_Network player;
+    [SerializeField] private Player player;
+    public Player_On_Network player_on_network;
+    
     void Start()
     {
         ConnectToServer("203.255.57.136", 5555);
-        player = new Player_On_Network(ref client, ref stream);
+        player_on_network = new Player_On_Network(ref client, ref stream);
     }
 
-    void Update()
-    {
-        float x = Input.GetAxis("Horizontal");
-        float y = Input.GetAxis("Vertical");
-        
-        if(x != 0 || y != 0)
-            player.moveEventSend($"(x : {x}, y : {y}) \n");
-    }
+    // void Update()
+    // {
+    //     float x = Input.GetAxis("Horizontal");
+    //     float y = Input.GetAxis("Vertical");
+    //     
+    //     if(x != 0 || y != 0)
+    //         player_on_network.moveEventSend($"(x : {x}, y : {y}) \n");
+    // }
 
     void OnApplicationQuit()
     {
@@ -57,13 +60,14 @@ public class NetworkManager : MonoBehaviour
     {
         if (isConnected)
         {
+            player_on_network.NoticeServerThatImLeaving();
             receiveThread.Abort();
             stream.Close();
             client.Close();
             isConnected = false;
         }
     }
-
+    
     void ReceiveData()
     {
         while (isConnected)
@@ -79,16 +83,40 @@ public class NetworkManager : MonoBehaviour
                     Debug.Log("Received from server: " + message);
 
                     // 여기서 서버로부터 받은 메시지에 따른 동작을 수행할 수 있습니다.
-                    player.Move(message);
+                    TryToMoveLocalPlayer(message);
+                    //player_on_network.Move(message);
                 }
             }
             catch (Exception e)
             {
-                Debug.LogError("Error receiving data: " + e.Message);
+                Debug.LogWarning("Error receiving data: " + e.Message);
                 isConnected = false;
             }
         }
     }
+
+    void TryToMoveLocalPlayer(string message)
+    {
+        if (message == "hello") return;
+        
+        Debug.Log($"message : {message}");
+        string str = message.Split(":")[1];
+        Debug.Log($"str : {str}");
+        string[] str_arr = str.Substring(1, str.Length - 2).Split(",");
+        Vector2 movingVector;
+
+        float x, y;
+        float.TryParse(str_arr[0], out x);
+        float.TryParse(str_arr[1], out y);
+        
+        Debug.Log($"(x, y) : ({x}, {y})");
+        
+        movingVector = new Vector2(x, y);
+        player.MoveByNetworkManager(movingVector);
+        Debug.LogWarning($"{movingVector}");
+    }
+    
+    
 }
 
 public class Player_On_Network
@@ -112,5 +140,12 @@ public class Player_On_Network
     public void Move(string received_data)
     {
         Debug.Log("RPC_MOVE CALLER_" + received_data);
+    }
+    
+    public void NoticeServerThatImLeaving()
+    {
+        string message = "Im Out!";
+        byte[] data = Encoding.ASCII.GetBytes(message);
+        _stream.Write(data, 0, data.Length);
     }
 }
