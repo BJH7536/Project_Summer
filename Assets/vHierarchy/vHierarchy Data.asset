@@ -19,6 +19,9 @@ MonoBehaviour:
     - goDatas_byGlobalId:
         keys:
         - globalObjectIdString: GlobalObjectId_V1-2-a63c5e0cb880131498eeee7f66e87492-914630799-0
+        - globalObjectIdString: GlobalObjectId_V1-2-a63c5e0cb880131498eeee7f66e87492-452889885-0
         values:
+        - colorIndex: 0
+          iconNameOrGuid: Settings Icon
         - colorIndex: 0
           iconNameOrGuid: Settings Icon

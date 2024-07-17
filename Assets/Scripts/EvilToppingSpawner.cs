@@ -28,11 +28,11 @@ public class EvilToppingSpawner : MonoBehaviour
                 if (!Physics.CheckBox(transform.position, spawnAreaSize / 2, Quaternion.identity))
                 {
                     Instantiate(EvilTopping, transform.position, transform.rotation);
-                    Debug.Log("Object Spawned!");
+                    //Debug.Log("Object Spawned!");
                 }
                 else
                 {
-                    Debug.Log("Spawn location is occupied.");
+                    //Debug.Log("Spawn location is occupied.");
                 }
             }
         }
