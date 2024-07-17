@@ -64,15 +64,13 @@ public class Player : MonoBehaviour
         if(inputVector != Vector2.zero)
             ChangeState(_runState);
         else
-        {
-            inputVector = Vector2.zero;
             ChangeState(_idleState);
-        }
+        
     }
     
     private void OnMovePerformed(InputAction.CallbackContext context)
     {
-        //inputVector = context.ReadValue<Vector2>();
+        inputVector = context.ReadValue<Vector2>();
         
         _networkManager.player_on_network.moveEventSend($"Move:{inputVector}\n");
         
@@ -81,7 +79,7 @@ public class Player : MonoBehaviour
 
     private void OnMoveCanceled(InputAction.CallbackContext context)
     {
-        //inputVector = Vector2.zero;
+        inputVector = Vector2.zero;
         
         _networkManager.player_on_network.moveEventSend($"Move:{inputVector}\n");
         

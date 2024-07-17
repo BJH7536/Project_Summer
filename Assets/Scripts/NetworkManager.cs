@@ -6,6 +6,7 @@ using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 public class NetworkManager : MonoBehaviour
@@ -83,8 +84,11 @@ public class NetworkManager : MonoBehaviour
                     Debug.Log("Received from server: " + message);
 
                     // 여기서 서버로부터 받은 메시지에 따른 동작을 수행할 수 있습니다.
-                    TryToMoveLocalPlayer(message);
+                    //TryToMoveLocalPlayer(message);
                     //player_on_network.Move(message);
+                    
+                    // 서버로부터 받은 메시지를 메인 스레드에서 처리
+                    ProcessMessageAsync(message).Forget();
                 }
             }
             catch (Exception e)
@@ -95,6 +99,12 @@ public class NetworkManager : MonoBehaviour
         }
     }
 
+    async UniTaskVoid ProcessMessageAsync(string message)
+    {
+        await UniTask.SwitchToMainThread();
+        TryToMoveLocalPlayer(message);
+    }
+    
     void TryToMoveLocalPlayer(string message)
     {
         if (message == "hello") return;
@@ -102,16 +112,17 @@ public class NetworkManager : MonoBehaviour
         Debug.Log($"message : {message}");
         string str = message.Split(":")[1];
         Debug.Log($"str : {str}");
-        string[] str_arr = str.Substring(1, str.Length - 2).Split(",");
-        Vector2 movingVector;
+        // str.Substring(1, str.Length - 2).Split(",");
 
-        float x, y;
-        float.TryParse(str_arr[0], out x);
-        float.TryParse(str_arr[1], out y);
+        string[] str_arr =  str.Split("(")[1].Split(")")[0].Split(", ");
+        
+        float.TryParse(str_arr[0], out var x);
+        float.TryParse(str_arr[1], out var y);
+        Debug.Log($"(str_arr[0], str_arr[1]) : ({str_arr[0]}, {str_arr[1]})");
         
         Debug.Log($"(x, y) : ({x}, {y})");
         
-        movingVector = new Vector2(x, y);
+        var movingVector = new Vector2(x, y);
         player.MoveByNetworkManager(movingVector);
         Debug.LogWarning($"{movingVector}");
     }
