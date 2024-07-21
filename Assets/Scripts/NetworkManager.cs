@@ -126,8 +126,6 @@ public class NetworkManager : MonoBehaviour
         player.MoveByNetworkManager(movingVector);
         Debug.LogWarning($"{movingVector}");
     }
-    
-    
 }
 
 public class Player_On_Network

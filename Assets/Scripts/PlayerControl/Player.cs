@@ -65,23 +65,22 @@ public class Player : MonoBehaviour
             ChangeState(_runState);
         else
             ChangeState(_idleState);
-        
     }
     
     private void OnMovePerformed(InputAction.CallbackContext context)
     {
-        inputVector = context.ReadValue<Vector2>();
+        //inputVector = context.ReadValue<Vector2>();
         
-        _networkManager.player_on_network.moveEventSend($"Move:{inputVector}\n");
+        _networkManager.player_on_network.moveEventSend($"Move:{context.ReadValue<Vector2>()}\n");
         
         //ChangeState(_runState);
     }
 
     private void OnMoveCanceled(InputAction.CallbackContext context)
     {
-        inputVector = Vector2.zero;
+        //inputVector = Vector2.zero;
         
-        _networkManager.player_on_network.moveEventSend($"Move:{inputVector}\n");
+        _networkManager.player_on_network.moveEventSend($"Move:{context.ReadValue<Vector2>()}\n");
         
         //ChangeState(_idleState);
     }
