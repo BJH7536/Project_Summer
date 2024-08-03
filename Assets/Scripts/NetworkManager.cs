@@ -18,10 +18,45 @@ public class NetworkManager : MonoBehaviour
 
     [SerializeField] private Player player;
     public Player_On_Network player_on_network;
+    public static NetworkManager instance;
+
+    public static NetworkManager Instance
+    {
+        get
+        {
+            if (instance == null)
+            {
+                instance = FindObjectOfType<NetworkManager>();
+                if (instance == null)
+                {
+                    GameObject singletonObject = new GameObject();
+                    instance = singletonObject.AddComponent<NetworkManager>();
+                    singletonObject.name = typeof(NetworkManager).ToString() + " (Singleton)";
+
+                    DontDestroyOnLoad(singletonObject); // 씬이 바뀌어도 파괴되지 않도록 설정
+                }
+            }
+            return instance;
+        }
+    }
+    
+    private void Awake()
+    {
+        // 인스턴스가 존재하면 자신을 파괴
+        if (instance != null && instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+        instance = this;
+        DontDestroyOnLoad(gameObject); // 씬이 바뀌어도 파괴되지 않도록 설정
+    }
+
     
     void Start()
     {
-        ConnectToServer("203.255.57.136", 5555);
+        //ConnectToServer("203.255.57.136", 5555);
         player_on_network = new Player_On_Network(ref client, ref stream);
     }
 
@@ -39,7 +74,7 @@ public class NetworkManager : MonoBehaviour
         DisconnectFromServer();
     }
 
-    void ConnectToServer(string serverAddress, int port)
+    public void ConnectToServer(string serverAddress, int port)
     {
         try
         {
@@ -57,7 +92,7 @@ public class NetworkManager : MonoBehaviour
         }
     }
 
-    void DisconnectFromServer()
+    public void DisconnectFromServer()
     {
         if (isConnected)
         {

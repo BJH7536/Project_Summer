@@ -5,7 +5,6 @@ using UnityEngine.SceneManagement;
 
 public class GameEnd : MonoBehaviour
 {
-    [SerializeField] private NetworkManager _networkManager;
     // Start is called before the first frame update
     void Start()
     {
@@ -19,6 +18,8 @@ public class GameEnd : MonoBehaviour
     }
     public void GameEndButton()
     {
+        Debug.Log("Disconnecting....");
+        NetworkManager.instance.DisconnectFromServer();
         SceneManager.LoadScene("Lobby");
     }
     
