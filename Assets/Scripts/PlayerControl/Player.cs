@@ -66,14 +66,12 @@ public class Player : MonoBehaviour
         else
             ChangeState(_idleState);
     }
-    
+
     private void OnMovePerformed(InputAction.CallbackContext context)
     {
-        //inputVector = context.ReadValue<Vector2>();
-        
-        _networkManager.player_on_network.moveEventSend($"Move:{context.ReadValue<Vector2>()}\n");
-        
-        //ChangeState(_runState);
+        Vector2 inputVector = context.ReadValue<Vector2>();
+        Vector2 directionVector = GetDirectionVector(inputVector);
+        _networkManager.player_on_network.moveEventSend($"Move:{directionVector}\n");
     }
 
     private void OnMoveCanceled(InputAction.CallbackContext context)
@@ -84,6 +82,32 @@ public class Player : MonoBehaviour
         
         //ChangeState(_idleState);
     }
+
+    private Vector2 GetDirectionVector(Vector2 inputVector)
+    {
+        float x = inputVector.x;
+        float y = inputVector.y;
+
+        if (x > 0 && y > 0)
+            return new Vector2(1, 1);      // 오른쪽 위
+        if (x < 0 && y > 0)
+            return new Vector2(-1, 1);     // 왼쪽 위
+        if (x > 0 && y < 0)
+            return new Vector2(1, -1);     // 오른쪽 아래
+        if (x < 0 && y < 0)
+            return new Vector2(-1, -1);    // 왼쪽 아래
+        if (x > 0)
+            return new Vector2(1, 0);      // 오른쪽
+        if (x < 0)
+            return new Vector2(-1, 0);     // 왼쪽
+        if (y > 0)
+            return new Vector2(0, 1);      // 위
+        if (y < 0)
+            return new Vector2(0, -1);     // 아래
+
+        return Vector2.zero;               // 정지
+    }
+
 
     private void OnInteractPerformed(InputAction.CallbackContext context)
     {
