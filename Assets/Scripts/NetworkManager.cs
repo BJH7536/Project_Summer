@@ -1,9 +1,5 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Globalization;
 using System.Net.Sockets;
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using Cysharp.Threading.Tasks;
@@ -17,22 +13,14 @@ public class NetworkManager : MonoBehaviour
     private bool isConnected = false;
 
     [SerializeField] private Player player;
+    [SerializeField] private PlayerB PlayerB;
     public Player_On_Network player_on_network;
-    
+
     void Start()
     {
         ConnectToServer("203.255.57.136", 5555);
         player_on_network = new Player_On_Network(ref client, ref stream);
     }
-
-    // void Update()
-    // {
-    //     float x = Input.GetAxis("Horizontal");
-    //     float y = Input.GetAxis("Vertical");
-    //     
-    //     if(x != 0 || y != 0)
-    //         player_on_network.moveEventSend($"(x : {x}, y : {y}) \n");
-    // }
 
     void OnApplicationQuit()
     {
@@ -68,7 +56,7 @@ public class NetworkManager : MonoBehaviour
             isConnected = false;
         }
     }
-    
+
     void ReceiveData()
     {
         while (isConnected)
@@ -81,12 +69,8 @@ public class NetworkManager : MonoBehaviour
                 if (bytesRead > 0)
                 {
                     string message = Encoding.ASCII.GetString(data, 0, bytesRead);
-                    Debug.Log("Received from server: " + message);
+                    //Debug.Log("Received from server: " + message);
 
-                    // 여기서 서버로부터 받은 메시지에 따른 동작을 수행할 수 있습니다.
-                    //TryToMoveLocalPlayer(message);
-                    //player_on_network.Move(message);
-                    
                     // 서버로부터 받은 메시지를 메인 스레드에서 처리
                     ProcessMessageAsync(message).Forget();
                 }
@@ -104,27 +88,34 @@ public class NetworkManager : MonoBehaviour
         await UniTask.SwitchToMainThread();
         TryToMoveLocalPlayer(message);
     }
-    
+
     void TryToMoveLocalPlayer(string message)
     {
-        if (message == "hello") return;
-        
-        Debug.Log($"message : {message}");
-        string str = message.Split(":")[1];
-        Debug.Log($"str : {str}");
-        // str.Substring(1, str.Length - 2).Split(",");
+        if (message.Equals("hello")) return;
 
-        string[] str_arr =  str.Split("(")[1].Split(")")[0].Split(", ");
-        
-        float.TryParse(str_arr[0], out var x);
-        float.TryParse(str_arr[1], out var y);
-        Debug.Log($"(str_arr[0], str_arr[1]) : ({str_arr[0]}, {str_arr[1]})");
-        
-        Debug.Log($"(x, y) : ({x}, {y})");
-        
-        var movingVector = new Vector2(x, y);
-        player.MoveByNetworkManager(movingVector);
-        Debug.LogWarning($"{movingVector}");
+        //Debug.Log($"message : {message}");
+        if (!message.StartsWith("Position:")) return;
+
+        // "Position:" 이후의 값을 ','로 구분하여 배열로 변환
+        string[] str_arr = message.Substring(9).Split(',');
+
+        if (str_arr.Length != 3)
+        {
+            Debug.LogWarning("Received position message with incorrect format.");
+            return;
+        }
+
+        if (float.TryParse(str_arr[0], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float x) &&
+            float.TryParse(str_arr[1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float y) &&
+            float.TryParse(str_arr[2], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float z))
+        {
+            Debug.LogWarning($"Parsed position: (x, y, z) = ({x}, {y}, {z})");
+            //PlayerB.set(x, y, z); // 실제 사용되는 메서드로 교체 필요
+        }
+        else
+        {
+            Debug.LogError("Failed to parse position data.");
+        }
     }
 }
 
@@ -139,18 +130,12 @@ public class Player_On_Network
         this._stream = stream;
     }
 
-    public void moveEventSend(string keyInfo)
+    public void SendMessage(string message)
     {
-        string message = "RPC_MOVE CALLER_" + new string(keyInfo);
         byte[] data = Encoding.ASCII.GetBytes(message);
         _stream.Write(data, 0, data.Length);
     }
 
-    public void Move(string received_data)
-    {
-        Debug.Log("RPC_MOVE CALLER_" + received_data);
-    }
-    
     public void NoticeServerThatImLeaving()
     {
         string message = "Im Out!";

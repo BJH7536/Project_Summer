@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -8,30 +7,31 @@ public class Player : MonoBehaviour
     [Header("Information")]
     [SerializeField] private Vector2 inputVector;
     [SerializeField] private float speed = 15f;
-    [SerializeField] private Transform holdPosition; // 플레이어 앞에 오브젝트를 들 위치
-    [SerializeField] private Transform raycastOrigin; // 레이캐스트 시작 위치
-    [SerializeField] private float interactDistance = 3f; // 상호작용 거리 (기본값을 5로 증가)
+    [SerializeField] private Transform holdPosition;
+    [SerializeField] private Transform raycastOrigin;
+    [SerializeField] private float interactDistance = 3f;
 
     private PlayerInputActions _playerInputActions;
     private Rigidbody _rigidbody;
     private Animator _animator;
-    private Holdable heldObject; // 들고 있는 오브젝트
+    private Holdable heldObject;
 
     private IPlayerState _currentState;
     private PlayerIdleState _idleState;
     private PlayerRunState _runState;
 
     private int interactableLayer;
-    
+
     private static readonly int IsRun = Animator.StringToHash("isRun");
     private static readonly int Holding = Animator.StringToHash("Holding");
 
     [SerializeField] private NetworkManager _networkManager;
-    
+    private float positionSendInterval = 0.5f;
+
     private void Awake()
     {
         interactableLayer = LayerMask.GetMask("Interactable");
-        
+
         _playerInputActions = new PlayerInputActions();
         _rigidbody = GetComponent<Rigidbody>();
         _animator = GetComponentInChildren<Animator>();
@@ -48,6 +48,8 @@ public class Player : MonoBehaviour
         _playerInputActions.Game.Move.performed += OnMovePerformed;
         _playerInputActions.Game.Move.canceled += OnMoveCanceled;
         _playerInputActions.Game.Interact.performed += OnInteractPerformed;
+
+        StartCoroutine(SendPositionRoutine());
     }
 
     private void OnDisable()
@@ -58,56 +60,35 @@ public class Player : MonoBehaviour
         _playerInputActions.Disable();
     }
 
-    public void MoveByNetworkManager(Vector2 vector2)
+    private IEnumerator SendPositionRoutine()
     {
-        inputVector = vector2;
-        if(inputVector != Vector2.zero)
-            ChangeState(_runState);
-        else
-            ChangeState(_idleState);
+        while (true)
+        {
+            yield return new WaitForSeconds(positionSendInterval);
+            SendPositionToServer();
+        }
+    }
+
+    private void SendPositionToServer()
+    {
+        Vector3 position = transform.position;
+        string positionMessage = $"Position:{position.x},{position.y},{position.z}\n";
+        _networkManager.player_on_network.SendMessage(positionMessage);
+        Debug.Log($"Sent position to server: {positionMessage}");
     }
 
     private void OnMovePerformed(InputAction.CallbackContext context)
     {
-        Vector2 inputVector = context.ReadValue<Vector2>();
-        Vector2 directionVector = GetDirectionVector(inputVector);
-        _networkManager.player_on_network.moveEventSend($"Move:{directionVector}\n");
+        inputVector = context.ReadValue<Vector2>();
+        ChangeState(inputVector != Vector2.zero ? _runState : _idleState);
+        SendPositionToServer();
     }
 
     private void OnMoveCanceled(InputAction.CallbackContext context)
     {
-        //inputVector = Vector2.zero;
-        
-        _networkManager.player_on_network.moveEventSend($"Move:{context.ReadValue<Vector2>()}\n");
-        
-        //ChangeState(_idleState);
+        inputVector = Vector2.zero;
+        ChangeState(_idleState);
     }
-
-    private Vector2 GetDirectionVector(Vector2 inputVector)
-    {
-        float x = inputVector.x;
-        float y = inputVector.y;
-
-        if (x > 0 && y > 0)
-            return new Vector2(1, 1);      // 오른쪽 위
-        if (x < 0 && y > 0)
-            return new Vector2(-1, 1);     // 왼쪽 위
-        if (x > 0 && y < 0)
-            return new Vector2(1, -1);     // 오른쪽 아래
-        if (x < 0 && y < 0)
-            return new Vector2(-1, -1);    // 왼쪽 아래
-        if (x > 0)
-            return new Vector2(1, 0);      // 오른쪽
-        if (x < 0)
-            return new Vector2(-1, 0);     // 왼쪽
-        if (y > 0)
-            return new Vector2(0, 1);      // 위
-        if (y < 0)
-            return new Vector2(0, -1);     // 아래
-
-        return Vector2.zero;               // 정지
-    }
-
 
     private void OnInteractPerformed(InputAction.CallbackContext context)
     {
@@ -120,53 +101,36 @@ public class Player : MonoBehaviour
             heldObject.Release(this);
         }
     }
-    
+
     private void TryInteractSomething()
     {
-        // => 기존에 tag를 통해서 물체를 감지하던 코드를 Layer기반으로 수정.
-        // 최대 감지할 수 있는 충돌체의 수는 10개
         Collider[] colliders = new Collider[10];
-        
-        // 충돌체 감지
         Physics.OverlapSphereNonAlloc(raycastOrigin.position, interactDistance, colliders, interactableLayer);
 
         foreach (var col in colliders)
         {
-            if(col == null) continue;
-            
-            // Holdable 인터페이스를 상속받는 컴포넌트가 있는지 확인
+            if (col == null) continue;
             var holdable = col.GetComponent<Holdable>();
             if (holdable != null)
             {
-                // Hold() 함수 호출
                 holdable.Hold(this);
                 break;
             }
         }
     }
 
-    /// <summary>
-    /// 토핑을 드는 기능
-    /// </summary>
-    /// <param name="topping"></param>
     public void HoldTopping(Holdable topping)
     {
-        // 물체를 들기 위한 로직
         heldObject = topping;
         heldObject.transform.SetParent(holdPosition);
         heldObject.transform.localPosition = Vector3.zero;
         heldObject.GetComponent<Rigidbody>().isKinematic = true;
-        heldObject.GetComponent<Collider>().isTrigger = true;       // 플레이어 캐릭터와 충돌하지 않도록 수정
-        Debug.Log("Picked up " + heldObject.name);
+        heldObject.GetComponent<Collider>().isTrigger = true;
         _animator.SetBool(Holding, true);
     }
-    
-    /// <summary>
-    /// 토핑을 내려놓는 기능
-    /// </summary>
+
     public void ReleaseTopping(Holdable topping)
     {
-        Debug.Log("Dropped " + topping.name);
         topping.transform.SetParent(null);
         topping.GetComponent<Rigidbody>().isKinematic = false;
         topping.GetComponent<Collider>().isTrigger = false;
@@ -185,7 +149,6 @@ public class Player : MonoBehaviour
         _currentState = newState;
         _currentState.Enter(this);
     }
-
 
     #region State
     private interface IPlayerState
@@ -206,10 +169,7 @@ public class Player : MonoBehaviour
             _player._rigidbody.angularVelocity = Vector3.zero;
         }
 
-        public void Execute()
-        {
-            // Idle 상태에서는 아무것도 하지 않음
-        }
+        public void Execute() { }
 
         public void Exit() { }
     }
@@ -229,22 +189,16 @@ public class Player : MonoBehaviour
 
             if (movement != Vector3.zero)
             {
-                // 플레이어 캐릭터의 Rigidbody
                 _player._rigidbody.velocity = movement;
-                //_player._rigidbody.MovePosition(_player._rigidbody.position + movement * Time.fixedDeltaTime);
-                
-                //_player.transform.LookAt(_player.transform.position + movement);
-                // 바라보는 방향이 좀 더 부드럽게 변하도록 보간을 추가
-                _player.transform.rotation = Quaternion.Lerp(_player.transform.rotation, Quaternion.LookRotation(movement), 10*Time.deltaTime);
+                _player.transform.rotation = Quaternion.Lerp(_player.transform.rotation, Quaternion.LookRotation(movement), 10 * Time.deltaTime);
             }
         }
 
         public void Exit() { }
     }
-    
+
     #endregion
 
-    // Gizmos를 사용하여 상호작용 범위를 시각적으로 표시합니다.
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.yellow;

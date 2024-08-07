@@ -9,7 +9,6 @@ public class UI_JoyStick : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
     public Canvas canvas;
 
     private Vector2 joystickStartPos;
-    private bool isJoystickActive = false;
 
     private void Start()
     {
@@ -39,12 +38,10 @@ public class UI_JoyStick : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
         joystickHandle.position = position;
         joystickHandle.gameObject.SetActive(true);
         joystickStartPos = position;
-        isJoystickActive = true;
     }
 
     private void DeactivateJoystick()
     {
         joystickHandle.gameObject.SetActive(false);
-        isJoystickActive = false;
     }
 }
