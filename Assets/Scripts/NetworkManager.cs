@@ -91,32 +91,39 @@ public class NetworkManager : MonoBehaviour
 
     void TryToMoveLocalPlayer(string message)
     {
-        if (message.Equals("hello")) return;
+        Debug.LogWarning($"{message}");
+        if (message.StartsWith("hello")) return;
 
-        //Debug.Log($"message : {message}");
         if (!message.StartsWith("Position:")) return;
 
-        // "Position:" 이후의 값을 ','로 구분하여 배열로 변환
-        string[] str_arr = message.Substring(9).Split(',');
+        // "Position:" 이후의 문자열에서 첫 번째로 등장하는 괄호 안의 값을 추출
+        int startIndex = message.IndexOf('(');
+        int endIndex = message.IndexOf(')');
 
-        if (str_arr.Length != 3)
+        if (startIndex != -1 && endIndex != -1 && endIndex > startIndex)
         {
-            Debug.LogWarning("Received position message with incorrect format.");
-            return;
-        }
+            // 괄호 안의 내용을 추출
+            string positionString = message.Substring(startIndex + 1, endIndex - startIndex - 1);
+            string[] str_arr = positionString.Split(',');
 
-        if (float.TryParse(str_arr[0], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float x) &&
-            float.TryParse(str_arr[1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float y) &&
-            float.TryParse(str_arr[2], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float z))
-        {
-            Debug.LogWarning($"Parsed position: (x, y, z) = ({x}, {y}, {z})");
-            //PlayerB.set(x, y, z); // 실제 사용되는 메서드로 교체 필요
+            // 좌표 값을 파싱
+            if (str_arr.Length == 3)
+            {
+                float.TryParse(str_arr[0], out var x);
+                float.TryParse(str_arr[1], out var y);
+                float.TryParse(str_arr[2], out var z);
+
+                // 이제 파싱된 좌표 값들을 사용할 수 있습니다.
+                Debug.LogWarning($"Parsed position: (x, y, z) = ({x}, {y}, {z})");
+                // PlayerB.set(x, y, z); // 실제 사용되는 메서드로 교체 필요
+            }
         }
         else
         {
-            Debug.LogError("Failed to parse position data.");
+            Debug.LogWarning("Invalid position format in message.");
         }
     }
+
 }
 
 public class Player_On_Network

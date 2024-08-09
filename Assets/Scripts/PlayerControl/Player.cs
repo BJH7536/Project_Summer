@@ -72,16 +72,15 @@ public class Player : MonoBehaviour
     private void SendPositionToServer()
     {
         Vector3 position = transform.position;
-        string positionMessage = $"Position:{position.x},{position.y},{position.z}\n";
+        string positionMessage = $"Position:({position.x},{position.y},{position.z})\n";
         _networkManager.player_on_network.SendMessage(positionMessage);
-        Debug.Log($"Sent position to server: {positionMessage}");
     }
 
     private void OnMovePerformed(InputAction.CallbackContext context)
     {
         inputVector = context.ReadValue<Vector2>();
         ChangeState(inputVector != Vector2.zero ? _runState : _idleState);
-        SendPositionToServer();
+        SendPositionRoutine();
     }
 
     private void OnMoveCanceled(InputAction.CallbackContext context)
