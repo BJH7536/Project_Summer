@@ -115,7 +115,7 @@ public class NetworkManager : MonoBehaviour
 
                 // 이제 파싱된 좌표 값들을 사용할 수 있습니다.
                 Debug.LogWarning($"Parsed position: (x, y, z) = ({x}, {y}, {z})");
-                // PlayerB.set(x, y, z); // 실제 사용되는 메서드로 교체 필요
+                PlayerB.MoveByNetworkManager(x, y, z); // 실제 사용되는 메서드로 교체 필요
             }
         }
         else

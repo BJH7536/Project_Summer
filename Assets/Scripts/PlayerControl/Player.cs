@@ -26,7 +26,7 @@ public class Player : MonoBehaviour
     private static readonly int Holding = Animator.StringToHash("Holding");
 
     [SerializeField] private NetworkManager _networkManager;
-    private float positionSendInterval = 0.5f;
+    private float positionSendInterval = .5f;
 
     private void Awake()
     {
@@ -49,7 +49,7 @@ public class Player : MonoBehaviour
         _playerInputActions.Game.Move.canceled += OnMoveCanceled;
         _playerInputActions.Game.Interact.performed += OnInteractPerformed;
 
-        StartCoroutine(SendPositionRoutine());
+        StartCoroutine(SendPositionRoutine()); // 코루틴 시작
     }
 
     private void OnDisable()
@@ -64,8 +64,8 @@ public class Player : MonoBehaviour
     {
         while (true)
         {
-            yield return new WaitForSeconds(positionSendInterval);
-            SendPositionToServer();
+            yield return new WaitForSeconds(positionSendInterval); // 5초 대기
+            SendPositionToServer(); // 위치 전송
         }
     }
 
@@ -80,7 +80,7 @@ public class Player : MonoBehaviour
     {
         inputVector = context.ReadValue<Vector2>();
         ChangeState(inputVector != Vector2.zero ? _runState : _idleState);
-        SendPositionRoutine();
+        // SendPositionRoutine(); 중복 호출을 방지하기 위해 제거
     }
 
     private void OnMoveCanceled(InputAction.CallbackContext context)
