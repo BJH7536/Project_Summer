@@ -94,33 +94,31 @@ public class NetworkManager : MonoBehaviour
 
     void TryToMoveLocalPlayer(string message)
     {
+        // "Position:" 문자열로 시작하는지 확인
         if (!message.StartsWith("Position:")) return;
 
-        // 클라이언트 ID 추출
-        int colonIndex = message.IndexOf(':');
-        if (colonIndex == -1) return;
+        // 메시지를 ":"로 분리
+        string[] splitMessage = message.Split(':');
+        if (splitMessage.Length < 2) return;
 
-        string receivedClientId = message.Substring(9, colonIndex - 9);
+        string receivedClientId = splitMessage[1].Substring(0, splitMessage[1].IndexOf('('));
         if (receivedClientId == clientId) return;  // 자신이 보낸 메시지는 무시
 
-        // "Position:" 이후의 문자열에서 첫 번째로 등장하는 괄호 안의 값을 추출
+        // 괄호 안의 내용을 추출하여 위치 정보 파싱
         int startIndex = message.IndexOf('(');
         int endIndex = message.IndexOf(')');
 
         if (startIndex != -1 && endIndex != -1 && endIndex > startIndex)
         {
-            // 괄호 안의 내용을 추출
             string positionString = message.Substring(startIndex + 1, endIndex - startIndex - 1);
             string[] str_arr = positionString.Split(',');
 
-            // 좌표 값을 파싱
             if (str_arr.Length == 3)
             {
                 float.TryParse(str_arr[0], out var x);
                 float.TryParse(str_arr[1], out var y);
                 float.TryParse(str_arr[2], out var z);
 
-                // 이제 파싱된 좌표 값들을 사용할 수 있습니다.
                 PlayerB.MoveByNetworkManager(x, y, z);
             }
         }
@@ -129,6 +127,7 @@ public class NetworkManager : MonoBehaviour
             Debug.LogWarning("Invalid position format in message.");
         }
     }
+
 }
 
 public class Player_On_Network
