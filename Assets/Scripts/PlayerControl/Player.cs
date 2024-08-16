@@ -26,7 +26,7 @@ public class Player : MonoBehaviour
     private static readonly int IsRun = Animator.StringToHash("isRun");
     private static readonly int Holding = Animator.StringToHash("Holding");
 
-    [SerializeField] private NetworkManager _networkManager;
+    //[SerializeField] private NetworkManager _networkManager;
     
     private void Awake()
     {
@@ -71,7 +71,7 @@ public class Player : MonoBehaviour
     {
         //inputVector = context.ReadValue<Vector2>();
         
-        _networkManager.player_on_network.moveEventSend($"Move:{context.ReadValue<Vector2>()}\n");
+        NetworkManager.instance.player_on_network.moveEventSend($"Move:{context.ReadValue<Vector2>()}\n");
         
         //ChangeState(_runState);
     }
@@ -80,7 +80,7 @@ public class Player : MonoBehaviour
     {
         //inputVector = Vector2.zero;
         
-        _networkManager.player_on_network.moveEventSend($"Move:{context.ReadValue<Vector2>()}\n");
+        NetworkManager.instance.player_on_network.moveEventSend($"Move:{context.ReadValue<Vector2>()}\n");
         
         //ChangeState(_idleState);
     }

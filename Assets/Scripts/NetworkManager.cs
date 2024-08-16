@@ -56,7 +56,7 @@ public class NetworkManager : MonoBehaviour
     
     void Start()
     {
-        //ConnectToServer("203.255.57.136", 5555);
+        ConnectToServer("203.255.57.136", 5555);
         player_on_network = new Player_On_Network(ref client, ref stream);
     }
 
@@ -160,6 +160,18 @@ public class NetworkManager : MonoBehaviour
         var movingVector = new Vector2(x, y);
         player.MoveByNetworkManager(movingVector);
         Debug.LogWarning($"{movingVector}");
+    }
+    
+    //player을 설정하는 메서드
+    public void SetPlayer(Player newPlayer)
+    {
+        player = newPlayer;
+    }
+
+    // player를 가져오는 메서드
+    public Player GetPlayer()
+    {
+        return player;
     }
 }
 
