@@ -16,10 +16,13 @@ public class NetworkManager : MonoBehaviour
     [SerializeField] private PlayerB PlayerB;
     public Player_On_Network player_on_network;
 
+    private string clientId;
+
     void Start()
     {
+        clientId = Guid.NewGuid().ToString();  // 고유한 클라이언트 ID 생성
         ConnectToServer("203.255.57.136", 5555);
-        player_on_network = new Player_On_Network(ref client, ref stream);
+        player_on_network = new Player_On_Network(ref client, ref stream, clientId);  // ID 전달
     }
 
     void OnApplicationQuit()
@@ -91,10 +94,14 @@ public class NetworkManager : MonoBehaviour
 
     void TryToMoveLocalPlayer(string message)
     {
-        Debug.LogWarning($"{message}");
-        if (message.StartsWith("hello")) return;
-
         if (!message.StartsWith("Position:")) return;
+
+        // 클라이언트 ID 추출
+        int colonIndex = message.IndexOf(':');
+        if (colonIndex == -1) return;
+
+        string receivedClientId = message.Substring(9, colonIndex - 9);
+        if (receivedClientId == clientId) return;  // 자신이 보낸 메시지는 무시
 
         // "Position:" 이후의 문자열에서 첫 번째로 등장하는 괄호 안의 값을 추출
         int startIndex = message.IndexOf('(');
@@ -114,8 +121,7 @@ public class NetworkManager : MonoBehaviour
                 float.TryParse(str_arr[2], out var z);
 
                 // 이제 파싱된 좌표 값들을 사용할 수 있습니다.
-                Debug.LogWarning($"Parsed position: (x, y, z) = ({x}, {y}, {z})");
-                PlayerB.MoveByNetworkManager(x, y, z); // 실제 사용되는 메서드로 교체 필요
+                PlayerB.MoveByNetworkManager(x, y, z);
             }
         }
         else
@@ -123,18 +129,19 @@ public class NetworkManager : MonoBehaviour
             Debug.LogWarning("Invalid position format in message.");
         }
     }
-
 }
 
 public class Player_On_Network
 {
     private TcpClient _client;
     private NetworkStream _stream;
+    private string clientId;
 
-    public Player_On_Network(ref TcpClient client, ref NetworkStream stream)
+    public Player_On_Network(ref TcpClient client, ref NetworkStream stream, string clientId)
     {
         this._client = client;
         this._stream = stream;
+        this.clientId = clientId;
     }
 
     public void SendMessage(string message)
@@ -145,8 +152,14 @@ public class Player_On_Network
 
     public void NoticeServerThatImLeaving()
     {
-        string message = "Im Out!";
+        string message = $"{clientId}:Im Out!";
         byte[] data = Encoding.ASCII.GetBytes(message);
         _stream.Write(data, 0, data.Length);
     }
+
+    public string GetClientId()
+    {
+        return clientId;
+    }
 }
+
