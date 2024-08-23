@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Text;
 using UnityEngine;
 
 public class Dough : MonoBehaviour
@@ -13,6 +14,33 @@ public class Dough : MonoBehaviour
     {
         toppingsStack.Push(topping); // 스택에 재료 추가
         Debug.Log("Added topping: " + topping);
+        SendDoughInfoToServer();
+    }
+
+    private void SendDoughInfoToServer()
+    {
+        string toppingsInfo = GenerateToppingsInfo();
+        Debug.Log(toppingsInfo);
+        NetworkManager.GetInstance().player_on_network.SendMessage(toppingsInfo);
+    }
+
+    // Dough의 스택에 있는 모든 토핑 정보를 문자열로 변환
+    private string GenerateToppingsInfo()
+    {
+        StringBuilder sb = new StringBuilder();
+        sb.Append($"Dough:{Type}:Toppings[");
+
+        foreach (var topping in toppingsStack)
+        {
+            sb.Append(topping.ToString());
+            sb.Append(",");
+        }
+
+        if (toppingsStack.Count > 0)
+            sb.Remove(sb.Length - 1, 1);  // 마지막 콤마 제거
+
+        sb.Append("]\n");
+        return sb.ToString();
     }
 
     // 최상위 재료를 제거하고 반환하는 함수

@@ -18,8 +18,13 @@ public class NetworkManager : MonoBehaviour
 
     private string clientId;
 
+    private static NetworkManager _instance;
+
+    public static NetworkManager GetInstance() {  return _instance; }
+
     void Start()
     {
+        _instance = this;
         clientId = Guid.NewGuid().ToString();  // 고유한 클라이언트 ID 생성
         ConnectToServer("203.255.57.136", 5555);
         player_on_network = new Player_On_Network(ref client, ref stream, clientId);  // ID 전달
@@ -94,6 +99,7 @@ public class NetworkManager : MonoBehaviour
 
     void TryToMoveLocalPlayer(string message)
     {
+        Debug.Log(message);
         // "Position:" 문자열로 시작하는지 확인
         if (!message.StartsWith("Position:")) return;
 

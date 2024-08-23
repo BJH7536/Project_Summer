@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.UIElements;
 
 public class Player : MonoBehaviour
 {
@@ -111,10 +112,22 @@ public class Player : MonoBehaviour
             var holdable = col.GetComponent<Holdable>();
             if (holdable != null)
             {
-                holdable.Hold(this);
+                holdable.Hold(this);    
                 break;
             }
         }
+    }
+
+    private void SendInteractionToServer(Holdable holdable)
+    {
+        Topping ToppingInfo = holdable.GetComponent<Topping>();
+        if (ToppingInfo != null)
+        {
+            Debug.Log(ToppingInfo.GetTopping().ToString());
+            string ToppingnMessage = $"Topping:{ToppingInfo.GetTopping()}\n";
+            _networkManager.player_on_network.SendMessage(ToppingnMessage);
+        }else
+            Debug.Log("없음 ");
     }
 
     public void HoldTopping(Holdable topping)
@@ -125,6 +138,7 @@ public class Player : MonoBehaviour
         heldObject.GetComponent<Rigidbody>().isKinematic = true;
         heldObject.GetComponent<Collider>().isTrigger = true;
         _animator.SetBool(Holding, true);
+        SendInteractionToServer(topping);
     }
 
     public void ReleaseTopping(Holdable topping)
@@ -133,8 +147,26 @@ public class Player : MonoBehaviour
         topping.GetComponent<Rigidbody>().isKinematic = false;
         topping.GetComponent<Collider>().isTrigger = false;
         _animator.SetBool(Holding, false);
+
+        // 서버로 토핑을 놓았다는 메시지 전송
+        SendToppingReleaseToServer(topping);
         heldObject = null;
     }
+
+    private void SendToppingReleaseToServer(Holdable topping)
+    {
+        Topping ToppingInfo = topping.GetComponent<Topping>();
+        if (ToppingInfo != null)
+        {
+            string ToppingnMessage = $"ToppingReleased:{ToppingInfo.GetTopping()}\n";
+            _networkManager.player_on_network.SendMessage(ToppingnMessage);
+        }
+        else
+        {
+            Debug.Log("토핑 정보가 없습니다.");
+        }
+    }
+
 
     private void FixedUpdate()
     {

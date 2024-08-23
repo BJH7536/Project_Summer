@@ -98,7 +98,16 @@ public class PizzaScoreData : ScriptableObject
         }
         
         Debug.Log($"{pizzaType.ToString()} 피자 주문에 대한 점수는 {totalScore}");
-        
+
+        // 서버로 점수 메시지 전송
+        SendScoreToServer(pizzaType, totalScore);
+
         return totalScore;
+    }
+
+    private void SendScoreToServer(Define.PizzaType pizzaType, int score)
+    {
+        string scoreMessage = $"PizzaScore:{pizzaType}:{score}\n";
+        NetworkManager.GetInstance().player_on_network.SendMessage(scoreMessage);
     }
 }

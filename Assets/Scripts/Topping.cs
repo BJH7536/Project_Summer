@@ -17,6 +17,8 @@ public class Topping : Holdable
         InteractableLayer = LayerMask.NameToLayer("Interactable");
     }
 
+    public Define.Topping GetTopping() {  return _type; }
+
     private void OnCollisionEnter(Collision other)
     {
         if (other.gameObject.layer == FloorLayer)
