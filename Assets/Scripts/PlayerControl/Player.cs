@@ -1,7 +1,6 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.Serialization;
 
 public class Player : MonoBehaviour
 {
@@ -11,22 +10,32 @@ public class Player : MonoBehaviour
     [SerializeField] private Transform holdPosition; // 플레이어 앞에 오브젝트를 들 위치
     [SerializeField] private Transform raycastOrigin; // 레이캐스트 시작 위치
     [SerializeField] private float interactDistance = 3f; // 상호작용 거리 (기본값을 5로 증가)
-
+    
+    private Vector3 destination;
     private PlayerInputActions _playerInputActions;
     private Rigidbody _rigidbody;
     private Animator _animator;
     private Holdable heldObject; // 들고 있는 오브젝트
-
     private IPlayerState _currentState;
     private PlayerIdleState _idleState;
     private PlayerRunState _runState;
-
+    private string _currentStateName;
     private int interactableLayer;
     
     private static readonly int IsRun = Animator.StringToHash("isRun");
     private static readonly int Holding = Animator.StringToHash("Holding");
 
-    [SerializeField] private NetworkManager _networkManager;
+    [SerializeField] public NetworkManager networkManager;
+
+    // isMine 변수 추가
+    [SerializeField] private bool isMine;
+
+    // Getter와 Setter 메서드 추가
+    public bool IsMine
+    {
+        get => isMine;
+        set => isMine = value;
+    }
     
     private void Awake()
     {
@@ -45,6 +54,8 @@ public class Player : MonoBehaviour
     private void OnEnable()
     {
         _playerInputActions.Enable();
+
+        // 입력 이벤트 연결 (isMine 체크 추가)
         _playerInputActions.Game.Move.performed += OnMovePerformed;
         _playerInputActions.Game.Move.canceled += OnMoveCanceled;
         _playerInputActions.Game.Interact.performed += OnInteractPerformed;
@@ -61,32 +72,33 @@ public class Player : MonoBehaviour
     public void MoveByNetworkManager(Vector2 vector2)
     {
         inputVector = vector2;
-        if(inputVector != Vector2.zero)
+        if (inputVector != Vector2.zero)
+        {
+            destination = new Vector3(vector2.x, 0, vector2.y);
             ChangeState(_runState);
+        }
         else
+        {
             ChangeState(_idleState);
+        }
     }
-    
+
     private void OnMovePerformed(InputAction.CallbackContext context)
     {
-        //inputVector = context.ReadValue<Vector2>();
-        
-        _networkManager.player_on_network.moveEventSend($"Move:{context.ReadValue<Vector2>()}\n");
-        
-        //ChangeState(_runState);
+        if (!isMine) return; // isMine이 false이면 입력 무시
+        // Move 관련 로직
     }
 
     private void OnMoveCanceled(InputAction.CallbackContext context)
     {
-        //inputVector = Vector2.zero;
-        
-        _networkManager.player_on_network.moveEventSend($"Move:{context.ReadValue<Vector2>()}\n");
-        
-        //ChangeState(_idleState);
+        if (!isMine) return; // isMine이 false이면 입력 무시
+        networkManager.networkClient.TrySendMoveEvent($"{_currentStateName}:{context.ReadValue<Vector2>()}\n", true);
     }
 
     private void OnInteractPerformed(InputAction.CallbackContext context)
     {
+        if (!isMine) return; // isMine이 false이면 입력 무시
+
         if (heldObject == null)
         {
             TryInteractSomething();
@@ -96,53 +108,37 @@ public class Player : MonoBehaviour
             heldObject.Release(this);
         }
     }
-    
+
     private void TryInteractSomething()
     {
-        // => 기존에 tag를 통해서 물체를 감지하던 코드를 Layer기반으로 수정.
-        // 최대 감지할 수 있는 충돌체의 수는 10개
         Collider[] colliders = new Collider[10];
-        
-        // 충돌체 감지
         Physics.OverlapSphereNonAlloc(raycastOrigin.position, interactDistance, colliders, interactableLayer);
 
         foreach (var col in colliders)
         {
-            if(col == null) continue;
+            if (col == null) continue;
             
-            // Holdable 인터페이스를 상속받는 컴포넌트가 있는지 확인
             var holdable = col.GetComponent<Holdable>();
             if (holdable != null)
             {
-                // Hold() 함수 호출
                 holdable.Hold(this);
                 break;
             }
         }
     }
 
-    /// <summary>
-    /// 토핑을 드는 기능
-    /// </summary>
-    /// <param name="topping"></param>
     public void HoldTopping(Holdable topping)
     {
-        // 물체를 들기 위한 로직
         heldObject = topping;
         heldObject.transform.SetParent(holdPosition);
         heldObject.transform.localPosition = Vector3.zero;
         heldObject.GetComponent<Rigidbody>().isKinematic = true;
-        heldObject.GetComponent<Collider>().isTrigger = true;       // 플레이어 캐릭터와 충돌하지 않도록 수정
-        Debug.Log("Picked up " + heldObject.name);
+        heldObject.GetComponent<Collider>().isTrigger = true;
         _animator.SetBool(Holding, true);
     }
-    
-    /// <summary>
-    /// 토핑을 내려놓는 기능
-    /// </summary>
+
     public void ReleaseTopping(Holdable topping)
     {
-        Debug.Log("Dropped " + topping.name);
         topping.transform.SetParent(null);
         topping.GetComponent<Rigidbody>().isKinematic = false;
         topping.GetComponent<Collider>().isTrigger = false;
@@ -153,16 +149,37 @@ public class Player : MonoBehaviour
     private void FixedUpdate()
     {
         _currentState?.Execute();
+        
+        if (!isMine) return;
+        // 현재 입력 상태를 계속 확인 
+        Vector2 currentInputVector = _playerInputActions.Game.Move.ReadValue<Vector2>();
+        networkManager.networkClient.TrySendMoveEvent($"{_currentStateName}:{currentInputVector}\n");
     }
-
+    
     private void ChangeState(IPlayerState newState)
     {
         _currentState?.Exit();
         _currentState = newState;
         _currentState.Enter(this);
+
+        #region About State Name
+        
+        _currentStateName = newState.GetType().Name;
+        if (_currentStateName.StartsWith("Player") && _currentStateName.EndsWith("State"))
+        {
+            _currentStateName = _currentStateName.Substring("Player".Length);
+            _currentStateName = _currentStateName.Substring(0, _currentStateName.Length - "State".Length);
+        }
+        #endregion
     }
 
-
+    // Gizmos를 사용하여 상호작용 범위를 시각적으로 표시합니다.
+    private void OnDrawGizmos()
+    {
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(raycastOrigin.position, interactDistance);
+    }
+    
     #region State
     private interface IPlayerState
     {
@@ -193,25 +210,26 @@ public class Player : MonoBehaviour
     private class PlayerRunState : IPlayerState
     {
         private Player _player;
+        private Vector3 _targetPosition;
+        
         public void Enter(Player player)
         {
             _player = player;
             _player._animator.SetBool(IsRun, true);
+
+            _targetPosition = _player.destination;
         }
 
         public void Execute()
         {
-            Vector3 movement = new Vector3(_player.inputVector.x, 0, _player.inputVector.y).normalized * _player.speed;
+            Vector3 vec = (_targetPosition - _player.transform.position);
+            Vector3 newVec = new Vector3(vec.x, 0, vec.y);
+            Vector3 movement = newVec.normalized * _player.speed;
 
             if (movement != Vector3.zero)
             {
-                // 플레이어 캐릭터의 Rigidbody
-                _player._rigidbody.velocity = movement;
-                //_player._rigidbody.MovePosition(_player._rigidbody.position + movement * Time.fixedDeltaTime);
-                
-                //_player.transform.LookAt(_player.transform.position + movement);
-                // 바라보는 방향이 좀 더 부드럽게 변하도록 보간을 추가
-                _player.transform.rotation = Quaternion.Lerp(_player.transform.rotation, Quaternion.LookRotation(movement), 10*Time.deltaTime);
+                _player._rigidbody.MovePosition(Vector3.Lerp(_player.transform.position, _targetPosition, _player.networkManager.networkClient.inputDetectionInterval / Time.fixedDeltaTime));
+                _player.transform.rotation = Quaternion.Lerp(_player.transform.rotation, Quaternion.LookRotation(movement), 10 * Time.deltaTime);
             }
         }
 
@@ -219,11 +237,4 @@ public class Player : MonoBehaviour
     }
     
     #endregion
-
-    // Gizmos를 사용하여 상호작용 범위를 시각적으로 표시합니다.
-    private void OnDrawGizmos()
-    {
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(raycastOrigin.position, interactDistance);
-    }
 }
