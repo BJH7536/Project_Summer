@@ -9,7 +9,6 @@ public class NetworkManager : MonoBehaviour
 {
     private TcpClient client;
     private NetworkStream stream;
-    private Thread receiveThread;
     private bool isConnected = false;
 
     [SerializeField] private Player player;
@@ -39,10 +38,9 @@ public class NetworkManager : MonoBehaviour
             return instance;
         }
     }
-    
+
     private void Awake()
     {
-        // 인스턴스가 존재하면 자신을 파괴
         if (instance != null && instance != this)
         {
             Destroy(gameObject);
@@ -50,15 +48,13 @@ public class NetworkManager : MonoBehaviour
         }
 
         instance = this;
-        DontDestroyOnLoad(gameObject); // 씬이 바뀌어도 파괴되지 않도록 설정
+        DontDestroyOnLoad(gameObject);
     }
 
-    
     void Start()
     {
         clientId = Guid.NewGuid().ToString();  // 고유한 클라이언트 ID 생성
         ConnectToServer("183.103.222.240", 8000);
-        player_on_network = new Player_On_Network(ref client, ref stream, clientId);  // ID 전달
     }
 
     void OnApplicationQuit()
@@ -66,17 +62,19 @@ public class NetworkManager : MonoBehaviour
         DisconnectFromServer();
     }
 
-    public void ConnectToServer(string serverAddress, int port)
+    public async void ConnectToServer(string serverAddress, int port)
     {
         try
         {
-            client = new TcpClient(serverAddress, port);
+            client = new TcpClient();
+            await client.ConnectAsync(serverAddress, port);
             stream = client.GetStream();
             isConnected = true;
 
-            receiveThread = new Thread(new ThreadStart(ReceiveData));
-            receiveThread.IsBackground = true;
-            receiveThread.Start();
+            player_on_network = new Player_On_Network(ref client, ref stream, clientId);  // ID 전달
+
+            // 비동기 수신 시작
+            ReceiveDataAsync().Forget();
         }
         catch (Exception e)
         {
@@ -89,28 +87,25 @@ public class NetworkManager : MonoBehaviour
         if (isConnected)
         {
             player_on_network.NoticeServerThatImLeaving();
-            receiveThread.Abort();
             stream.Close();
             client.Close();
             isConnected = false;
         }
     }
 
-    void ReceiveData()
+    async UniTaskVoid ReceiveDataAsync()
     {
+        byte[] data = new byte[1024];
+
         while (isConnected)
         {
             try
             {
-                byte[] data = new byte[1024];
-                int bytesRead = stream.Read(data, 0, data.Length);
+                int bytesRead = await stream.ReadAsync(data, 0, data.Length);
 
                 if (bytesRead > 0)
                 {
                     string message = Encoding.ASCII.GetString(data, 0, bytesRead);
-                    //Debug.Log("Received from server: " + message);
-
-                    // 서버로부터 받은 메시지를 메인 스레드에서 처리
                     ProcessMessageAsync(message).Forget();
                 }
             }
@@ -118,6 +113,7 @@ public class NetworkManager : MonoBehaviour
             {
                 Debug.LogWarning("Error receiving data: " + e.Message);
                 isConnected = false;
+                break;
             }
         }
     }
@@ -131,17 +127,14 @@ public class NetworkManager : MonoBehaviour
     void TryToMoveLocalPlayer(string message)
     {
         Debug.Log(message);
-        // "Position:" 문자열로 시작하는지 확인
         if (!message.StartsWith("Position:")) return;
 
-        // 메시지를 ":"로 분리
         string[] splitMessage = message.Split(':');
         if (splitMessage.Length < 2) return;
 
         string receivedClientId = splitMessage[1].Substring(0, splitMessage[1].IndexOf('('));
         if (receivedClientId == clientId) return;  // 자신이 보낸 메시지는 무시
 
-        // 괄호 안의 내용을 추출하여 위치 정보 파싱
         int startIndex = message.IndexOf('(');
         int endIndex = message.IndexOf(')');
 
@@ -197,4 +190,3 @@ public class Player_On_Network
         return clientId;
     }
 }
-
