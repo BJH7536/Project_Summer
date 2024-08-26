@@ -21,7 +21,7 @@ public class Dough : MonoBehaviour
     {
         string toppingsInfo = GenerateToppingsInfo();
         //Debug.Log(toppingsInfo);
-        NetworkManager.GetInstance().player_on_network.SendMessage(toppingsInfo);
+        NetworkManager.instance.player_on_network.SendMessage(toppingsInfo);
     }
 
     // Dough의 스택에 있는 모든 토핑 정보를 문자열로 변환

@@ -18,11 +18,6 @@ public class NetworkManager : MonoBehaviour
 
     private string clientId;
 
-    private static NetworkManager _instance;
-
-    public static NetworkManager GetInstance() {  return _instance; }
-
-
     public static NetworkManager instance;
 
     public static NetworkManager Instance
@@ -61,7 +56,6 @@ public class NetworkManager : MonoBehaviour
     
     void Start()
     {
-        _instance = this;
         clientId = Guid.NewGuid().ToString();  // 고유한 클라이언트 ID 생성
         ConnectToServer("183.103.222.240", 8000);
         player_on_network = new Player_On_Network(ref client, ref stream, clientId);  // ID 전달

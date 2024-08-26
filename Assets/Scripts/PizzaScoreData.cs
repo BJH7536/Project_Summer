@@ -108,6 +108,6 @@ public class PizzaScoreData : ScriptableObject
     private void SendScoreToServer(Define.PizzaType pizzaType, int score)
     {
         string scoreMessage = $"PizzaScore:{pizzaType}:{score}\n";
-        NetworkManager.GetInstance().player_on_network.SendMessage(scoreMessage);
+        NetworkManager.instance.player_on_network.SendMessage(scoreMessage);
     }
 }
