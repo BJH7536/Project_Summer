@@ -56,8 +56,8 @@ public class NetworkManager : MonoBehaviour
     
     void Start()
     {
-        NetworkManager.instance.ConnectToServer("183.103.222.240", 8000);
-        NetworkManager.instance.MakePlayerOnNetwork();
+        ConnectToServer("183.103.222.240", 8000);
+        MakePlayerOnNetwork();
     }
 
     // void Update()
