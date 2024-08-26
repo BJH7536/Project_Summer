@@ -20,7 +20,7 @@ public class Dough : MonoBehaviour
     private void SendDoughInfoToServer()
     {
         string toppingsInfo = GenerateToppingsInfo();
-        Debug.Log(toppingsInfo);
+        //Debug.Log(toppingsInfo);
         NetworkManager.GetInstance().player_on_network.SendMessage(toppingsInfo);
     }
 

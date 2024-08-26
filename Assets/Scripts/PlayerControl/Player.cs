@@ -73,8 +73,8 @@ public class Player : MonoBehaviour
     private void SendPositionToServer()
     {
         Vector3 position = transform.position;
-        string positionMessage = $"Position:{_networkManager.player_on_network.GetClientId()}({position.x},{position.y},{position.z})\n";
-        _networkManager.player_on_network.SendMessage(positionMessage);
+        string positionMessage = $"Position:{NetworkManager.GetInstance().player_on_network.GetClientId()}({position.x},{position.y},{position.z})\n";
+        NetworkManager.GetInstance().player_on_network.SendMessage(positionMessage);
     }
 
     private void OnMovePerformed(InputAction.CallbackContext context)
@@ -123,9 +123,9 @@ public class Player : MonoBehaviour
         Topping ToppingInfo = holdable.GetComponent<Topping>();
         if (ToppingInfo != null)
         {
-            Debug.Log(ToppingInfo.GetTopping().ToString());
+            //Debug.Log(ToppingInfo.GetTopping().ToString());
             string ToppingnMessage = $"Topping:{ToppingInfo.GetTopping()}\n";
-            _networkManager.player_on_network.SendMessage(ToppingnMessage);
+            NetworkManager.GetInstance().player_on_network.SendMessage(ToppingnMessage);
         }else
             Debug.Log("없음 ");
     }
@@ -159,7 +159,7 @@ public class Player : MonoBehaviour
         if (ToppingInfo != null)
         {
             string ToppingnMessage = $"ToppingReleased:{ToppingInfo.GetTopping()}\n";
-            _networkManager.player_on_network.SendMessage(ToppingnMessage);
+            NetworkManager.GetInstance().player_on_network.SendMessage(ToppingnMessage);
         }
         else
         {
