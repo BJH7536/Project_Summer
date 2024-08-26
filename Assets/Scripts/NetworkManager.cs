@@ -56,8 +56,8 @@ public class NetworkManager : MonoBehaviour
     
     void Start()
     {
-        ConnectToServer("203.255.57.136", 5555);
-        player_on_network = new Player_On_Network(ref client, ref stream);
+        NetworkManager.instance.ConnectToServer("183.103.222.240", 8000);
+        NetworkManager.instance.MakePlayerOnNetwork();
     }
 
     // void Update()
@@ -172,6 +172,11 @@ public class NetworkManager : MonoBehaviour
     public Player GetPlayer()
     {
         return player;
+    }
+
+    public void MakePlayerOnNetwork()
+    {
+        player_on_network = new Player_On_Network(ref client, ref stream);
     }
 }
 

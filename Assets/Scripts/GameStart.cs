@@ -9,11 +9,10 @@ public class GameStart : MonoBehaviour
 
     public void GameStartButton()
     {
-        Debug.Log("connecting....");
-        NetworkManager.instance.ConnectToServer("203.255.57.136", 5555);
-        SceneManager.LoadScene("Migration");
+        LoadingSceneController.LoadScene("Migration");
+       
         
-        Instantiate(NetworkManager.instance.GetPlayer());
+        //Instantiate(NetworkManager.instance.GetPlayer());
         // GameObject foundPlayerObject = GameObject.Find("Player");
         // if (foundPlayerObject != null)
         // {
