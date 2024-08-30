@@ -121,7 +121,36 @@ public class NetworkManager : MonoBehaviour
     async UniTaskVoid ProcessMessageAsync(string message)
     {
         await UniTask.SwitchToMainThread();
-        TryToMoveLocalPlayer(message);
+
+        if (message.StartsWith("Position:"))
+        {
+            TryToMoveLocalPlayer(message);
+        }
+        else if (message.StartsWith("Topping:"))
+        {
+            ProcessToppingMessage(message);
+        }
+    }
+
+    // 토핑 관련 메시지를 처리하는 메서드 추가
+    void ProcessToppingMessage(string message)
+    {
+        string[] splitMessage = message.Split(':');
+        if (splitMessage.Length < 3) return;
+
+        string action = splitMessage[1]; // "Hold" 또는 "Release"
+        string toppingType = splitMessage[2]; // 토핑 종류 (예: "Cheese", "Pepperoni" 등)
+
+        if (action == "Hold")
+        {
+            // 상대방이 토핑을 잡는 것을 반영
+            PlayerB.HoldTopping(toppingType);
+        }
+        else if (action == "Release")
+        {
+            // 상대방이 토핑을 놓는 것을 반영
+            PlayerB.ReleaseTopping(toppingType);
+        }
     }
 
     void TryToMoveLocalPlayer(string message)
