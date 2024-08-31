@@ -25,8 +25,6 @@ public class Player : MonoBehaviour
 
     private static readonly int IsRun = Animator.StringToHash("isRun");
     private static readonly int Holding = Animator.StringToHash("Holding");
-
-    [SerializeField] private NetworkManager _networkManager;
     private float positionSendInterval = .5f;
 
     private void Awake()
@@ -73,7 +71,7 @@ public class Player : MonoBehaviour
     private void SendPositionToServer()
     {
         Vector3 position = transform.position;
-        string positionMessage = $"Position:{NetworkManager.instance.player_on_network.GetClientId()}({position.x},{position.y},{position.z})\n";
+        string positionMessage = $"Position:({position.x},{position.y},{position.z})\n";
         NetworkManager.instance.player_on_network.SendMessage(positionMessage);
     }
 

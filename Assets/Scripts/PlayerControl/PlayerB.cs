@@ -8,30 +8,39 @@ public class PlayerB : MonoBehaviour
     private Vector3 targetPosition;
     private float moveSpeed = 5f; // 이동 속도 조절
 
-    // 토핑 프리팹들을 참조할 수 있는 딕셔너리
-    private Dictionary<Define.Topping, GameObject> toppingPrefabs = new Dictionary<Define.Topping, GameObject>();
+    // Inspector에서 할당할 수 있는 토핑 프리팹 리스트
+    [SerializeField] private List<GameObject> toppingPrefabsList;
+    private Dictionary<string, GameObject> toppingPrefabs = new Dictionary<string, GameObject>();
+
     // 현재 게임에 생성되어 있는 토핑 오브젝트들을 관리하는 리스트
-    private List<GameObject> activeToppings = new List<GameObject>();
+    private List<Holdable> activeToppings = new List<Holdable>();
+
+    [SerializeField] private Transform holdPosition; // HoldPosition 참조 추가
 
     void Start()
     {
         targetPosition = transform.position; // 초기 위치 설정
 
-        // 토핑 프리팹을 로드하거나 초기화하는 코드 추가
-        LoadToppingPrefabs();
+        // Inspector에서 설정한 프리팹 리스트를 딕셔너리에 추가
+        InitializeToppingPrefabs();
     }
 
-    private void LoadToppingPrefabs()
+    private void InitializeToppingPrefabs()
     {
-        // Prefabs/Pizza Dough 경로에서 토핑 프리팹들을 로드합니다.
-        toppingPrefabs[Define.Topping.Cheese] = Resources.Load<GameObject>("Prefabs/Pizza Dough/CheeseTopping");
-        toppingPrefabs[Define.Topping.Pepperoni] = Resources.Load<GameObject>("Prefabs/Pizza Dough/PepperoniTopping");
-        toppingPrefabs[Define.Topping.Bulgogi] = Resources.Load<GameObject>("Prefabs/Pizza Dough/BulgogiTopping");
-        toppingPrefabs[Define.Topping.Pineapple] = Resources.Load<GameObject>("Prefabs/Pizza Dough/PineappleTopping");
-        toppingPrefabs[Define.Topping.Shrimp] = Resources.Load<GameObject>("Prefabs/Pizza Dough/ShrimpTopping");
-        toppingPrefabs[Define.Topping.Mushroom] = Resources.Load<GameObject>("Prefabs/Pizza Dough/MushroomTopping");
-        toppingPrefabs[Define.Topping.Bacon] = Resources.Load<GameObject>("Prefabs/Pizza Dough/BaconTopping");
-        // 필요시 다른 토핑도 추가
+        // toppingPrefabsList에 있는 프리팹들을 toppingPrefabs 딕셔너리에 추가합니다.
+        foreach (var prefab in toppingPrefabsList)
+        {
+            Holdable holdable = prefab.GetComponent<Holdable>();
+            if (holdable != null)
+            {
+                string toppingName = prefab.name.Replace(" ", string.Empty); // 공백 제거
+                toppingPrefabs[toppingName] = prefab;
+            }
+            else
+            {
+                Debug.LogWarning($"The prefab {prefab.name} does not have a Holdable component.");
+            }
+        }
     }
 
     public void MoveByNetworkManager(float x, float y, float z)
@@ -54,53 +63,77 @@ public class PlayerB : MonoBehaviour
 
     public void HoldTopping(string toppingType)
     {
-        // toppingType을 Define.Topping enum으로 변환
-        if (Enum.TryParse(toppingType, out Define.Topping toppingEnum))
-        {
-            if (toppingPrefabs.ContainsKey(toppingEnum))
-            {
-                // 토핑 프리팹을 생성하여 잡기 동작을 반영
-                GameObject toppingInstance = Instantiate(toppingPrefabs[toppingEnum], transform.position, Quaternion.identity);
-                toppingInstance.transform.SetParent(this.transform); // 플레이어에 붙이기
-                activeToppings.Add(toppingInstance); // 활성화된 토핑 리스트에 추가
+        // 전달된 toppingType을 기반으로 프리팹을 검색하여 생성
+        string sanitizedToppingType = toppingType.Replace(" ", string.Empty); // 공백 제거
 
-                Debug.Log($"Holding topping: {toppingType}");
-            }
-            else
+        foreach (var toppingPrefab in toppingPrefabs)
+        {
+            if (toppingPrefab.Key.StartsWith(sanitizedToppingType, StringComparison.OrdinalIgnoreCase))
             {
-                Debug.LogWarning($"Topping prefab not found for type: {toppingType}");
+                // Instantiate를 사용하여 프리팹을 HoldPosition에서 생성
+                GameObject toppingInstance = Instantiate(toppingPrefab.Value, holdPosition.position, Quaternion.identity);
+                Holdable toppingHoldable = toppingInstance.GetComponent<Holdable>();
+
+                if (toppingHoldable != null)
+                {
+                    toppingHoldable.transform.SetParent(holdPosition);
+                    toppingHoldable.transform.localPosition = Vector3.zero; // HoldPosition에 정렬
+                    Rigidbody toppingRigidbody = toppingInstance.GetComponent<Rigidbody>();
+                    if (toppingRigidbody != null)
+                    {
+                        toppingRigidbody.isKinematic = true;
+                    }
+                    activeToppings.Add(toppingHoldable); // 활성화된 토핑 리스트에 추가
+
+                    Debug.Log($"Holding topping: {toppingType}");
+                    return; // 성공적으로 찾으면 종료
+                }
+                else
+                {
+                    Debug.LogWarning("The instantiated prefab does not have a Holdable component.");
+                    return; // 문제가 있을 경우 종료
+                }
             }
+        }
+
+        Debug.LogWarning($"Topping prefab not found for type: {toppingType}");
+    }
+
+    public void ReleaseTopping(Holdable topping)
+    {
+        if (activeToppings.Contains(topping))
+        {
+            // 토핑을 놓는 동작
+            Rigidbody toppingRigidbody = topping.GetComponent<Rigidbody>();
+            if (toppingRigidbody != null)
+            {
+                // Enable physics upon release
+                toppingRigidbody.isKinematic = false;
+            }
+            topping.transform.SetParent(null); // 플레이어에서 분리
+            activeToppings.Remove(topping); // 활성화된 토핑 리스트에서 제거
+            Destroy(topping.gameObject); // 오브젝트를 파괴하여 제거
+
+            Debug.Log($"Releasing topping: {topping.name}");
         }
         else
         {
-            Debug.LogWarning($"Invalid topping type: {toppingType}");
+            Debug.LogWarning($"Attempted to release a topping not currently held: {topping.name}");
         }
     }
 
-    public void ReleaseTopping(string toppingType)
+    public Holdable GetToppingByType(string toppingType)
     {
-        // toppingType을 Define.Topping enum으로 변환
-        if (Enum.TryParse(toppingType, out Define.Topping toppingEnum))
+        string sanitizedToppingType = toppingType.Replace(" ", string.Empty); // 공백 제거
+
+        foreach (var topping in activeToppings)
         {
-            // 활성화된 토핑 리스트에서 해당 타입의 토핑을 찾음
-            GameObject toppingToRemove = activeToppings.Find(topping => topping.name.Contains(toppingEnum.ToString()));
-
-            if (toppingToRemove != null)
+            if (topping.name.StartsWith(sanitizedToppingType, StringComparison.OrdinalIgnoreCase))
             {
-                toppingToRemove.transform.SetParent(null); // 플레이어에서 분리
-                Destroy(toppingToRemove); // 오브젝트를 파괴하여 제거
-                activeToppings.Remove(toppingToRemove); // 활성화된 토핑 리스트에서 제거
-
-                Debug.Log($"Releasing topping: {toppingType}");
-            }
-            else
-            {
-                Debug.LogWarning($"No active topping found for type: {toppingType}");
+                return topping;
             }
         }
-        else
-        {
-            Debug.LogWarning($"Invalid topping type: {toppingType}");
-        }
+
+        return null;
     }
 }

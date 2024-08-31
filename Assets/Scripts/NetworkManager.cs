@@ -15,8 +15,6 @@ public class NetworkManager : MonoBehaviour
     [SerializeField] private PlayerB PlayerB;
     public Player_On_Network player_on_network;
 
-    private string clientId;
-
     public static NetworkManager instance;
 
     public static NetworkManager Instance
@@ -53,8 +51,7 @@ public class NetworkManager : MonoBehaviour
 
     void Start()
     {
-        clientId = Guid.NewGuid().ToString();  // 고유한 클라이언트 ID 생성
-        ConnectToServer("183.103.222.240", 8000);
+        ConnectToServer("127.0.0.1", 8080);
     }
 
     void OnApplicationQuit()
@@ -71,7 +68,7 @@ public class NetworkManager : MonoBehaviour
             stream = client.GetStream();
             isConnected = true;
 
-            player_on_network = new Player_On_Network(ref client, ref stream, clientId);  // ID 전달
+            player_on_network = new Player_On_Network(ref client, ref stream);  // 클라이언트 ID 없이 초기화
 
             // 비동기 수신 시작
             ReceiveDataAsync().Forget();
@@ -79,6 +76,7 @@ public class NetworkManager : MonoBehaviour
         catch (Exception e)
         {
             Debug.LogError("Failed to connect to server: " + e.Message);
+            isConnected = false;  // 연결 실패 시 isConnected를 false로 설정
         }
     }
 
@@ -106,6 +104,7 @@ public class NetworkManager : MonoBehaviour
                 if (bytesRead > 0)
                 {
                     string message = Encoding.ASCII.GetString(data, 0, bytesRead);
+                    Debug.Log(message);
                     ProcessMessageAsync(message).Forget();
                 }
             }
@@ -124,32 +123,42 @@ public class NetworkManager : MonoBehaviour
 
         if (message.StartsWith("Position:"))
         {
-            TryToMoveLocalPlayer(message);
+            //TryToMoveLocalPlayer(message);
         }
         else if (message.StartsWith("Topping:"))
         {
-            ProcessToppingMessage(message);
+            ProcessToppingMessage(message, isReleased: false);
+        }
+        else if (message.StartsWith("ToppingReleased:"))
+        {
+            ProcessToppingMessage(message, isReleased: true);
         }
     }
 
-    // 토핑 관련 메시지를 처리하는 메서드 추가
-    void ProcessToppingMessage(string message)
+    void ProcessToppingMessage(string message, bool isReleased)
     {
         string[] splitMessage = message.Split(':');
-        if (splitMessage.Length < 3) return;
+        if (splitMessage.Length < 2) return;
 
-        string action = splitMessage[1]; // "Hold" 또는 "Release"
-        string toppingType = splitMessage[2]; // 토핑 종류 (예: "Cheese", "Pepperoni" 등)
+        string toppingType = splitMessage[1].Trim(); // Topping type (e.g., "Cheese", "Pepperoni")
 
-        if (action == "Hold")
+        if (!isReleased)
         {
             // 상대방이 토핑을 잡는 것을 반영
             PlayerB.HoldTopping(toppingType);
         }
-        else if (action == "Release")
+        else
         {
             // 상대방이 토핑을 놓는 것을 반영
-            PlayerB.ReleaseTopping(toppingType);
+            Holdable toppingToRelease = PlayerB.GetToppingByType(toppingType);
+            if (toppingToRelease != null)
+            {
+                PlayerB.ReleaseTopping(toppingToRelease);
+            }
+            else
+            {
+                Debug.LogWarning($"No active topping found for type: {toppingType}");
+            }
         }
     }
 
@@ -160,9 +169,6 @@ public class NetworkManager : MonoBehaviour
 
         string[] splitMessage = message.Split(':');
         if (splitMessage.Length < 2) return;
-
-        string receivedClientId = splitMessage[1].Substring(0, splitMessage[1].IndexOf('('));
-        if (receivedClientId == clientId) return;  // 자신이 보낸 메시지는 무시
 
         int startIndex = message.IndexOf('(');
         int endIndex = message.IndexOf(')');
@@ -192,13 +198,11 @@ public class Player_On_Network
 {
     private TcpClient _client;
     private NetworkStream _stream;
-    private string clientId;
 
-    public Player_On_Network(ref TcpClient client, ref NetworkStream stream, string clientId)
+    public Player_On_Network(ref TcpClient client, ref NetworkStream stream)
     {
         this._client = client;
         this._stream = stream;
-        this.clientId = clientId;
     }
 
     public void SendMessage(string message)
@@ -209,13 +213,8 @@ public class Player_On_Network
 
     public void NoticeServerThatImLeaving()
     {
-        string message = $"{clientId}:Im Out!";
+        string message = "Im Out!";
         byte[] data = Encoding.ASCII.GetBytes(message);
         _stream.Write(data, 0, data.Length);
-    }
-
-    public string GetClientId()
-    {
-        return clientId;
     }
 }
