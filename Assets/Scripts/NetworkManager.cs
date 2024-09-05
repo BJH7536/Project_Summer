@@ -54,7 +54,7 @@ public class NetworkManager : MonoBehaviour
     void Start()
     {
         clientId = Guid.NewGuid().ToString();  // 고유한 클라이언트 ID 생성
-        ConnectToServer("183.103.222.240", 8000);
+        ConnectToServer("117.16.154.225", 8000);
     }
 
     void OnApplicationQuit()
