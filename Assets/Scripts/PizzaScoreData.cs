@@ -100,7 +100,9 @@ public class PizzaScoreData : ScriptableObject
         Debug.Log($"{pizzaType.ToString()} 피자 주문에 대한 점수는 {totalScore}");
 
         // 서버로 점수 메시지 전송
-        SendScoreToServer(pizzaType, totalScore);
+        //SendScoreToServer(pizzaType, totalScore);
+        
+        
 
         return totalScore;
     }
