@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: -521445529598994456}
   - component: {fileID: 8063534055409634312}
   - component: {fileID: -6036937785134158884}
+  - component: {fileID: 2937763405342453702}
   m_Layer: 6
   m_Name: Bacon Slice
   m_TagString: Untagged
@@ -147,3 +148,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _type: 7
+--- !u!114 &2937763405342453702
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 671405513867937161}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8dde52d1cc08a794da6ec2b96d379e05, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  toppingPrefabsList: []
+  holdPosition: {fileID: 0}

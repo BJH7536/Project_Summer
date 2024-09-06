@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 1775056823062935494}
   - component: {fileID: -1112623541139374669}
   - component: {fileID: 3315761153404398565}
+  - component: {fileID: 7546953373123557711}
   m_Layer: 6
   m_Name: Cheese Slice A
   m_TagString: Untagged
@@ -147,3 +148,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _type: 2
+--- !u!114 &7546953373123557711
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6546205030464255349}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8dde52d1cc08a794da6ec2b96d379e05, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  toppingPrefabsList: []
+  holdPosition: {fileID: 0}

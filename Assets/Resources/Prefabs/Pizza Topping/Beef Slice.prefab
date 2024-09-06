@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 2290573714088010889}
   - component: {fileID: -7209573606785099593}
   - component: {fileID: 7928831409423532405}
+  - component: {fileID: 6369104776660859258}
   m_Layer: 6
   m_Name: Beef Slice
   m_TagString: Untagged
@@ -147,3 +148,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _type: 1
+--- !u!114 &6369104776660859258
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5914706456188549313}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8dde52d1cc08a794da6ec2b96d379e05, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  toppingPrefabsList: []
+  holdPosition: {fileID: 0}

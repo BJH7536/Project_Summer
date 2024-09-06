@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 8750095058932276976}
   - component: {fileID: -5017765177555908545}
   - component: {fileID: -385670829189253647}
+  - component: {fileID: 3668197200601762282}
   m_Layer: 6
   m_Name: Pineapple Slice
   m_TagString: Untagged
@@ -147,3 +148,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _type: 4
+--- !u!114 &3668197200601762282
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2266050051978225934}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8dde52d1cc08a794da6ec2b96d379e05, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  toppingPrefabsList: []
+  holdPosition: {fileID: 0}
